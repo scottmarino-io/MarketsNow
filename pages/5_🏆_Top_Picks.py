@@ -490,7 +490,11 @@ with tab_dive:
             t = yf.Ticker(ticker)
             return t.history(period="1y", interval="1d", auto_adjust=True)
 
-        hist = _load_dive_chart(sel)
+        try:
+            hist = _load_dive_chart(sel)
+        except Exception:
+            hist = pd.DataFrame()
+            st.warning("⏳ Price chart temporarily unavailable (rate limited). Try again in a minute.")
         if not hist.empty:
             fig_chart = go.Figure()
             fig_chart.add_trace(go.Candlestick(
