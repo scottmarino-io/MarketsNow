@@ -248,17 +248,78 @@ if fred_key:
 
     st.divider()
 
+# ── top 5 picks (compact) ────────────────────────────────────────────────────
+
+st.markdown("<div class='section-header'>🏆 Top Investment Picks</div>", unsafe_allow_html=True)
+
+try:
+    from modules.screener.universe import SP500_COMBINED
+    from modules.screener.earnings import (
+        fetch_earnings_data, fetch_earnings_details, fetch_price_history_extended,
+    )
+    from modules.screener.investment_signals import build_top_picks_df
+
+    @st.cache_data(ttl=3600, show_spinner=False)
+    def _home_top_picks():
+        universe = tuple(SP500_COMBINED)
+        prices = fetch_price_history_extended(universe, period="1y")
+        e_df = fetch_earnings_data(universe)
+        e_det = fetch_earnings_details(universe)
+        return build_top_picks_df(prices, e_df, e_det)
+
+    with st.spinner("Loading top picks…"):
+        picks_df = _home_top_picks()
+
+    if not picks_df.empty:
+        top5 = picks_df.head(5)
+        pick_cols = st.columns(5)
+        for idx, (_, row) in enumerate(top5.iterrows()):
+            ticker = row.get("ticker", "—")
+            conv = row.get("conviction", "C")
+            comp = int(row.get("composite", 0))
+            price = row.get("price", 0)
+            ret1m = row.get("ret_1m")
+            conv_colors = {"A": "#a6e3a1", "B": "#94e2d5", "C": "#f9e2af", "D": "#fab387", "F": "#f38ba8"}
+            conv_color = conv_colors.get(conv, "#6c7086")
+            ret_str = f"{ret1m:+.1f}%" if pd.notna(ret1m) else "—"
+            ret_color = "#a6e3a1" if pd.notna(ret1m) and ret1m > 0 else "#f38ba8" if pd.notna(ret1m) else "#6c7086"
+
+            with pick_cols[idx]:
+                st.markdown(
+                    f"<div class='metric-card'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:center'>"
+                    f"<span style='font-weight:700;color:#cdd6f4;font-size:1rem'>{ticker}</span>"
+                    f"<span style='color:{conv_color};font-weight:700;font-size:.85rem'>Grade {conv}</span></div>"
+                    f"<div class='metric-value' style='color:{conv_color};font-size:1.3rem'>{comp:+d}</div>"
+                    f"<div style='display:flex;justify-content:space-between;margin-top:4px'>"
+                    f"<span style='color:#a6adc8;font-size:.8rem'>${price:.2f}</span>"
+                    f"<span style='color:{ret_color};font-size:.8rem'>{ret_str}</span></div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown(
+            "<div style='text-align:center;color:#888;font-size:.85rem;margin-top:8px'>"
+            "<a href='#' style='color:#4a90d9'>View all picks in 🏆 Top Picks →</a></div>",
+            unsafe_allow_html=True,
+        )
+except Exception as e:
+    st.caption(f"Top picks loading… {e}")
+
+st.divider()
+
 # ── quick navigation cards ───────────────────────────────────────────────────
 
 st.markdown("<div class='section-header'>Pages</div>", unsafe_allow_html=True)
 
-nav_cols = st.columns(4)
+nav_cols = st.columns(5)
 
 pages = [
-    ("📡", "Market Stress", "25+ macro indicators, composite stress score, AI analysis, direction forecast, economic calendar"),
-    ("⚙", "Wheel Screener", "Options wheel strategy screener with IV smile, yield vs delta, theta decay analysis"),
-    ("📈", "Momentum Screener", "S&P 100 + Nasdaq 100 ranked by composite score — technical, fundamental, sentiment"),
-    ("📺", "Market Monitor", "Bloomberg-style price dashboard with trend scoring and market breadth"),
+    ("📡", "Market Stress", "25+ macro indicators, stress score, AI analysis, direction forecast"),
+    ("⚙", "Wheel Screener", "Options wheel strategy with IV smile, yield vs delta, theta decay"),
+    ("📈", "Momentum Screener", "S&P 100 + Nasdaq 100 ranked by technical + fundamental score"),
+    ("📺", "Market Monitor", "Bloomberg-style price dashboard with trend scoring and breadth"),
+    ("🏆", "Top Picks", "S&P 500 investment screener — earnings analysis, AI thesis, top 20"),
 ]
 
 for i, (icon, title, desc) in enumerate(pages):

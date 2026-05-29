@@ -1,4 +1,4 @@
-"""Ticker universe definitions — S&P 100 + Nasdaq 100, combined and deduplicated (~170 tickers)."""
+"""Ticker universe definitions — S&P 500 + Nasdaq 100, combined and deduplicated."""
 
 SP100 = [
     "AAPL","ABBV","ABT","ACN","ADBE","AIG","AMD","AMGN","AMZN","APD",
@@ -10,7 +10,7 @@ SP100 = [
     "META","MMC","MMM","MO","MRK","MS","MSFT","NEE","NFLX","NKE",
     "NVDA","ORCL","PEP","PFE","PG","PLD","PM","PYPL","QCOM","RTX",
     "SBUX","SCHW","SO","SPGI","T","TGT","TMO","TMUS","TXN","UNH",
-    "UNP","UPS","USB","V","VZ","WFC","WMT","XOM","CVX","LLY",
+    "UNP","UPS","USB","V","VZ","WFC","WMT","XOM",
 ]
 
 NASDAQ100 = [
@@ -25,7 +25,71 @@ NASDAQ100 = [
     "VRSK","VRTX","WDAY","XEL","ZS","ZM","AXON","BKR","CDW","CSGP",
 ]
 
+SP500 = [
+    "A","AAL","AAPL","ABBV","ABNB","ABT","ACGL","ACN","ADBE","ADI",
+    "ADM","ADP","ADSK","AEE","AEP","AES","AFL","AIG","AIZ","AJG",
+    "AKAM","ALB","ALGN","ALL","ALLE","AMAT","AMCR","AMD","AME","AMGN",
+    "AMP","AMT","AMZN","ANET","ANSS","AON","AOS","APA","APD","APH",
+    "APTV","ARE","ATO","ATVI","AVGO","AVY","AWK","AXP","AZO",
+    "BA","BAC","BAX","BBWI","BBY","BDX","BEN","BF-B","BG","BIIB",
+    "BIO","BK","BKNG","BKR","BLDR","BLK","BMY","BR","BRK-B","BRO",
+    "BSX","BWA","BX","BXP",
+    "C","CAG","CAH","CARR","CAT","CB","CBOE","CBRE","CCI","CCL",
+    "CDNS","CDW","CE","CEG","CF","CFG","CHD","CHRW","CHTR","CI",
+    "CINF","CL","CLX","CMED","CMS","CNC","CNP","COF","COO","COP",
+    "COR","COST","CPAY","CPB","CPRT","CPT","CRL","CRM","CRWD","CSCO",
+    "CSGP","CSX","CTAS","CTLT","CTRA","CTSH","CTVA","CVS","CVX",
+    "D","DAL","DAY","DD","DE","DECK","DFS","DG","DGX","DHI",
+    "DHR","DIS","DLTR","DOV","DOW","DPZ","DRI","DTE","DUK","DVA","DVN",
+    "DXCM",
+    "EA","EBAY","ECL","ED","EFX","EIX","EL","EMN","EMR","ENPH",
+    "EOG","EPAM","EQIX","EQR","EQT","ES","ESS","ETN","ETR","EVRG",
+    "EW","EXC","EXPD","EXPE","EXR",
+    "F","FANG","FAST","FBHS","FCX","FDS","FDX","FE","FFIV","FI",
+    "FICO","FIS","FITB","FLT","FMC","FOX","FOXA","FRT","FSLR","FTNT",
+    "FTV",
+    "GD","GDDY","GE","GEHC","GEN","GEV","GILD","GIS","GL","GLW",
+    "GM","GNRC","GOOGL","GPC","GPN","GRMN","GS","GWW",
+    "HAL","HAS","HBAN","HCA","HD","HOLX","HON","HPE","HPQ","HRL",
+    "HSIC","HST","HSY","HUBB","HUM","HWM",
+    "IBM","ICE","IDXX","IEX","IFF","ILMN","INCY","INTC","INTU","INVH",
+    "IP","IPG","IQV","IR","IRM","ISRG","IT","ITW","IVZ",
+    "J","JBHT","JBL","JCI","JKHY","JNJ","JNPR","JPM",
+    "K","KDP","KEY","KEYS","KHC","KIM","KLAC","KMB","KMI","KMX",
+    "KO","KR",
+    "L","LDOS","LEN","LH","LHX","LIN","LKQ","LLY","LMT","LNT",
+    "LOW","LRCX","LULU","LUV","LVS","LW","LYB","LYV",
+    "MA","MAA","MAR","MAS","MCD","MCHP","MCK","MCO","MDLZ","MDT",
+    "MET","META","MGM","MHK","MKC","MKTX","MLM","MMC","MMM","MNST",
+    "MO","MOH","MOS","MPC","MPWR","MRK","MRNA","MRVL","MS","MSCI",
+    "MSFT","MSI","MTB","MTCH","MTD","MU",
+    "NCLH","NDAQ","NDSN","NEE","NEM","NFLX","NI","NKE","NOC","NOW",
+    "NRG","NSC","NTAP","NTRS","NUE","NVDA","NVR","NWS","NWSA",
+    "O","ODFL","OKE","OMC","ON","ORCL","ORLY","OTIS","OXY",
+    "PANW","PARA","PAYC","PAYX","PCAR","PCG","PEG","PEP","PFE","PFG",
+    "PG","PGR","PH","PHM","PKG","PLD","PM","PNC","PNR","PNW",
+    "POOL","PPG","PPL","PRU","PSA","PSX","PTC","PVH","PWR","PXD","PYPL",
+    "QCOM","QRVO",
+    "RCL","REG","REGN","RF","RJF","RL","RMD","ROK","ROL","ROP",
+    "ROST","RSG","RTX",
+    "SBAC","SBUX","SCHW","SEE","SHW","SIVB","SJM","SLB","SMCI","SNA",
+    "SNPS","SO","SOLV","SPG","SPGI","SRE","STE","STLD","STT","STX",
+    "STZ","SWK","SWKS","SYF","SYK","SYY",
+    "T","TAP","TDG","TDY","TECH","TEL","TER","TFC","TFX","TGT",
+    "TJX","TMO","TMUS","TPR","TRGP","TRMB","TROW","TRV","TSCO","TSLA",
+    "TSN","TT","TTWO","TXN","TXT","TYL",
+    "UAL","UBER","UDR","UHS","ULTA","UNH","UNP","UPS","URI","USB",
+    "V","VICI","VLO","VLTO","VMC","VRSK","VRSN","VRTX","VST","VTR","VTRS","VZ",
+    "WAB","WAT","WBA","WBD","WDAY","WDC","WEC","WELL","WFC","WHR",
+    "WM","WMB","WMT","WRB","WST","WTW","WY",
+    "XEL","XOM","XRAY","XYL",
+    "YUM",
+    "ZBH","ZBRA","ZM","ZTS",
+]
+
 COMBINED = sorted(set(SP100 + NASDAQ100))
+
+SP500_COMBINED = sorted(set(SP500 + NASDAQ100))
 
 SECTOR_OVERRIDES = {
     "BRK-B": "Financials",
