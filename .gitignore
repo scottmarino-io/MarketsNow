@@ -1,0 +1,26 @@
+# Environment
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Cache
+.ticker_cache.json
+*.egg-info/
+dist/
+build/
