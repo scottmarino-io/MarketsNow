@@ -97,9 +97,67 @@ except Exception:
 
 st.divider()
 
-# ── stress gauge (compact) ───────────────────────────────────────────────────
+# ── dashboard columns ────────────────────────────────────────────────────────
 
 stress_col, breadth_col = st.columns(2, gap="large")
+
+# ── market breadth (compact) — rendered first so it isn't blocked by FRED ──
+
+with breadth_col:
+    st.markdown("<div class='section-header'>Market Breadth</div>", unsafe_allow_html=True)
+
+    if massive_key:
+        try:
+            from modules.market.breadth import BreadthFetcher
+            from massive import RESTClient
+
+            @st.cache_data(ttl=30)
+            def _home_breadth(_api_key: str):
+                client = RESTClient(api_key=_api_key)
+                bf = BreadthFetcher(client)
+                bf.load_exchange_tickers()
+                return bf.fetch()
+
+            bsnap = _home_breadth(massive_key)
+            if bsnap:
+                def _tick_color(val):
+                    if val >= 1000:  return "#a6e3a1"
+                    if val >= 500:   return "#94e2d5"
+                    if val >= -499:  return "#f9e2af"
+                    if val >= -999:  return "#fab387"
+                    return "#f38ba8"
+
+                b1, b2, b3 = st.columns(3)
+                for col, label, tick_val, pct_val in [
+                    (b1, "All-Market", bsnap.tick_all,  bsnap.breadth_all_pct),
+                    (b2, "NYSE",       bsnap.tick_nyse, bsnap.breadth_nyse_pct),
+                    (b3, "Nasdaq",     bsnap.tick_nq,   bsnap.breadth_nq_pct),
+                ]:
+                    color = _tick_color(tick_val)
+                    pct_str = f"{pct_val:.1f}%" if pct_val is not None else "N/A"
+                    sign = "+" if tick_val >= 0 else ""
+                    col.markdown(
+                        f"<div class='metric-card'>"
+                        f"<div class='metric-label'>{label}</div>"
+                        f"<div class='metric-value' style='color:{color}'>{sign}{tick_val:,}</div>"
+                        f"<div class='metric-sub'>{pct_str} advancing</div>"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                total = bsnap.up_all + bsnap.dn_all
+                st.markdown(
+                    f"<div style='text-align:center;color:#888;font-size:.85rem;margin-top:8px'>"
+                    f"{bsnap.up_all:,} advancing / {bsnap.dn_all:,} declining of {total:,} stocks"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+        except Exception as e:
+            st.warning(f"Could not load breadth data: {e}")
+    else:
+        st.info("Add a **Massive API key** to see market breadth.")
+
+# ── stress gauge (compact) ───────────────────────────────────────────────────
 
 with stress_col:
     st.markdown("<div class='section-header'>Market Stress</div>", unsafe_allow_html=True)
@@ -153,62 +211,6 @@ with stress_col:
             st.warning(f"Could not load stress data: {e}")
     else:
         st.info("Add a **FRED API key** in the sidebar to see the stress gauge.")
-
-# ── market breadth (compact) ─────────────────────────────────────────────────
-
-with breadth_col:
-    st.markdown("<div class='section-header'>Market Breadth</div>", unsafe_allow_html=True)
-
-    if massive_key:
-        try:
-            from modules.market.breadth import BreadthFetcher
-            from massive import RESTClient
-
-            @st.cache_data(ttl=30)
-            def _home_breadth():
-                client = RESTClient(api_key=massive_key)
-                bf = BreadthFetcher(client)
-                bf.load_exchange_tickers()
-                return bf.fetch()
-
-            bsnap = _home_breadth()
-            if bsnap:
-                def _tick_color(val):
-                    if val >= 1000:  return "#a6e3a1"
-                    if val >= 500:   return "#94e2d5"
-                    if val >= -499:  return "#f9e2af"
-                    if val >= -999:  return "#fab387"
-                    return "#f38ba8"
-
-                b1, b2, b3 = st.columns(3)
-                for col, label, tick_val, pct_val in [
-                    (b1, "All-Market", bsnap.tick_all,  bsnap.breadth_all_pct),
-                    (b2, "NYSE",       bsnap.tick_nyse, bsnap.breadth_nyse_pct),
-                    (b3, "Nasdaq",     bsnap.tick_nq,   bsnap.breadth_nq_pct),
-                ]:
-                    color = _tick_color(tick_val)
-                    pct_str = f"{pct_val:.1f}%" if pct_val is not None else "N/A"
-                    sign = "+" if tick_val >= 0 else ""
-                    col.markdown(
-                        f"<div class='metric-card'>"
-                        f"<div class='metric-label'>{label}</div>"
-                        f"<div class='metric-value' style='color:{color}'>{sign}{tick_val:,}</div>"
-                        f"<div class='metric-sub'>{pct_str} advancing</div>"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-
-                total = bsnap.up_all + bsnap.dn_all
-                st.markdown(
-                    f"<div style='text-align:center;color:#888;font-size:.85rem;margin-top:8px'>"
-                    f"{bsnap.up_all:,} advancing / {bsnap.dn_all:,} declining of {total:,} stocks"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
-        except Exception as e:
-            st.warning(f"Could not load breadth data: {e}")
-    else:
-        st.info("Add a **Massive API key** to see market breadth.")
 
 st.divider()
 
