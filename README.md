@@ -31,6 +31,8 @@ python -m cli.terminal_monitor --tickers SPY QQQ IWM DIA QQQI --interval 60
 ```bash
 git clone https://github.com/scottmarino-io/MarketsNow.git
 cd MarketsNow
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -51,6 +53,7 @@ cp .env.example .env
 ### 3. Run
 
 ```bash
+source .venv/bin/activate   # if not already active
 streamlit run app.py
 ```
 
