@@ -24,3 +24,9 @@ Thumbs.db
 *.egg-info/
 dist/
 build/
+
+# Backtest artifacts (regenerable; not committed)
+backtest/.cache/
+backtest/results/*.csv
+backtest/results/*.json
+backtest/results/*.png
