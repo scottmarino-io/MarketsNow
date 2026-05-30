@@ -8,3 +8,7 @@ rich
 fredapi>=0.5.1
 yfinance>=0.2.36
 anthropic>=0.40.0
+
+# Backtest module (backtest/)
+pyarrow>=14.0.0
+matplotlib>=3.7.0
