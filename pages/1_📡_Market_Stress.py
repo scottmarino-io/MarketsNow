@@ -26,6 +26,7 @@ from modules.stress.direction_indicator import (
 from modules.stress.economic_calendar import build_calendar
 from modules.stress.news_ticker import render_ticker
 from modules.stress.stress_calculator import classify, current_scores, historical_composite
+from modules.market.uw_fetchers import fetch_market_tide_eod, fetch_gex_levels
 from modules.shared.theme import hex_to_rgba, inject_css
 
 load_dotenv()
@@ -118,6 +119,21 @@ with st.sidebar:
         )
     else:
         st.success("Anthropic API key loaded ✓", icon="🤖")
+
+    unusual_whales_key: str = ""
+    try:
+        unusual_whales_key = st.secrets["UNUSUAL_WHALES_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        unusual_whales_key = os.environ.get("UNUSUAL_WHALES_API_KEY", "")
+
+    if not unusual_whales_key:
+        unusual_whales_key = st.text_input(
+            "Unusual Whales API Key", type="password",
+            placeholder="For Gamma/Tide in the direction forecast (optional)…",
+            help="Get a key at https://unusualwhales.com/api",
+        )
+    else:
+        st.success("Unusual Whales API key loaded ✓", icon="🐋")
 
     st.divider()
     chart_years = st.select_slider("Chart history", options=[1, 2, 3, 5, 7], value=3,
@@ -352,7 +368,14 @@ else:
 
     if dir_btn:
         with st.spinner("Fetching headlines & computing forecast…"):
-            signals = compute_signals(data, hist if not hist.empty else pd.Series(dtype=float))
+            tide = fetch_market_tide_eod(unusual_whales_key) if unusual_whales_key else None
+            gamma = (
+                fetch_gex_levels(unusual_whales_key, "SPY", source="vol")
+                if unusual_whales_key else None
+            )
+            signals = compute_signals(
+                data, hist if not hist.empty else pd.Series(dtype=float), tide, gamma,
+            )
             headlines = fetch_market_headlines()
             forecast = generate_direction_forecast(anthropic_key, signals, headlines)
         st.session_state["dir_forecast"] = forecast

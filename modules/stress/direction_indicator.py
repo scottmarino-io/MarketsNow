@@ -70,8 +70,21 @@ def fetch_market_headlines(max_headlines: int = 10) -> List[str]:
         return []
 
 
-def compute_signals(data: dict, composite_hist: pd.Series) -> Dict:
-    """Extract quantitative signals from market data for the direction model."""
+def compute_signals(
+    data: dict,
+    composite_hist: pd.Series,
+    tide: Optional[Dict] = None,
+    gamma: Optional[Dict] = None,
+) -> Dict:
+    """Extract quantitative signals from market data for the direction model.
+
+    `tide` / `gamma` are optional Unusual Whales readings (fetch_market_tide_eod()
+    and fetch_gex_levels(..., source="vol") results respectively) — passed as
+    explicit dicts rather than merged into `data`, since `data` is an FRED/Yahoo
+    pd.Series dict with a different shape than these pre-computed UW scalars.
+    Both default to None so this stays backward-compatible with any caller that
+    doesn't have a Unusual Whales key configured.
+    """
 
     def get(key):
         return data.get(key, pd.Series(dtype=float))
@@ -122,6 +135,18 @@ def compute_signals(data: dict, composite_hist: pd.Series) -> Dict:
             float(composite_hist.iloc[-1] - composite_hist.iloc[-5])
             if len(composite_hist) >= 5 else None
         ),
+        # Unusual Whales — options market positioning (optional, see docstring)
+        "mt_net_call_premium": tide.get("net_call_premium") if tide else None,
+        "mt_net_put_premium": tide.get("net_put_premium") if tide else None,
+        "mt_net_premium_bias": (
+            round((tide["net_call_premium"] + tide["net_put_premium"]) / 1_000_000, 1)
+            if tide and tide.get("net_call_premium") is not None
+            and tide.get("net_put_premium") is not None
+            else None
+        ),
+        "gamma_flip": gamma.get("gamma_flip") if gamma else None,
+        "gamma_call_wall": gamma.get("call_wall") if gamma else None,
+        "gamma_put_wall": gamma.get("put_wall") if gamma else None,
     }
 
     return {k: v for k, v in signals.items()}
@@ -144,6 +169,17 @@ def _build_direction_prompt(signals: Dict, headlines: List[str]) -> str:
             return "N/A"
         sign = "+" if val >= 0 else ""
         return f"{sign}{val:.2f}{suffix}"
+
+    def uw(val, suffix="", decimals=1):
+        if val is None:
+            return "N/A — UW not configured"
+        sign = "+" if val >= 0 else ""
+        return f"{sign}{val:.{decimals}f}{suffix}"
+
+    def uw_level(val):
+        if val is None:
+            return "N/A — UW not configured"
+        return f"{val:g}"
 
     headline_block = ""
     if headlines:
@@ -187,6 +223,18 @@ QUANTITATIVE SIGNALS:
   Composite Stress Index:
     Current score:     {fmt(signals.get('composite_score'), '/100', 1)}
     5-day change:      {chg(signals.get('composite_5d_chg'))} pts
+
+  Options Market Positioning (Unusual Whales):
+    Market Tide net premium (calls − puts): {uw(signals.get('mt_net_premium_bias'), 'M')}
+      (as of last session close — Market Tide revises intraday, so only the
+       settled end-of-day reading is used here to avoid noise)
+    SPY Gamma Exposure (dealer positioning, in SPY dollar terms — approx.
+    1/10 of the S&P 500 index level):
+      Gamma flip level:       {uw_level(signals.get('gamma_flip'))}
+      Call wall (resistance): {uw_level(signals.get('gamma_call_wall'))}
+      Put wall (support):     {uw_level(signals.get('gamma_put_wall'))}
+      (intraday-reactive — read as directional-volume basis, not a fixed
+       structural level)
 {headline_block}
 
 Respond ONLY with a JSON object in this exact format, no other text:

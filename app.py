@@ -62,6 +62,17 @@ with st.sidebar:
     if anthropic_key:
         st.success("Anthropic API key loaded", icon="🤖")
 
+    unusual_whales_key = ""
+    try:
+        unusual_whales_key = st.secrets["UNUSUAL_WHALES_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        unusual_whales_key = os.environ.get("UNUSUAL_WHALES_API_KEY", "")
+    if not unusual_whales_key:
+        unusual_whales_key = st.text_input("Unusual Whales API Key", type="password",
+                                            placeholder="For Gamma/Tide on Breadth (optional)…")
+    else:
+        st.success("Unusual Whales API key loaded", icon="🐋")
+
     st.divider()
     if st.button("🔄  Refresh all data", use_container_width=True):
         st.cache_data.clear()
@@ -156,6 +167,26 @@ with breadth_col:
             st.warning(f"Could not load breadth data: {e}")
     else:
         st.info("Add a **Massive API key** to see market breadth.")
+
+    # ── UW gamma / tide (compact) — own try/except so a UW failure never
+    #    blocks the breadth cards above it, same lesson as the FRED/breadth
+    #    column-ordering fix (commit 790fe00): render what already works
+    #    first, unconditionally, then attempt the addition.
+    if unusual_whales_key:
+        try:
+            from modules.market.uw_fetchers import fetch_market_tide_eod, fetch_gex_levels
+            from modules.market.uw_display import render_tide_card, render_gamma_card
+
+            tide = fetch_market_tide_eod(unusual_whales_key)
+            gamma = fetch_gex_levels(unusual_whales_key, "SPY", source="vol")
+
+            uw1, uw2 = st.columns(2)
+            render_tide_card(tide, col=uw1)
+            render_gamma_card(gamma, levels_oi=None, spot_price=None, col=uw2)
+        except Exception as e:
+            st.warning(f"Could not load Unusual Whales data: {e}")
+    elif massive_key:
+        st.caption("Add a **Unusual Whales API key** to see Gamma/Tide.")
 
 # ── stress gauge (compact) ───────────────────────────────────────────────────
 

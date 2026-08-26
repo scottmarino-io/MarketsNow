@@ -78,12 +78,24 @@ def render_api_key_sidebar() -> dict:
         if anthropic_key:
             st.success("Anthropic ✓", icon="🤖")
 
+        unusual_whales_key = _resolve_key(
+            "UNUSUAL_WHALES_API_KEY",
+            "UNUSUAL_WHALES_API_KEY",
+            "Unusual Whales API Key",
+            "Optional — enables Gamma/Tide on Breadth",
+            "Get a key at https://unusualwhales.com/api",
+            required=False,
+        )
+        if unusual_whales_key:
+            st.success("Unusual Whales ✓", icon="🐋")
+
         st.divider()
 
     return {
         "fred": fred_key,
         "massive": massive_key,
         "anthropic": anthropic_key,
+        "unusual_whales": unusual_whales_key,
     }
 
 
@@ -109,3 +121,18 @@ def get_anthropic_key() -> str:
         return st.secrets["ANTHROPIC_API_KEY"]
     except (KeyError, FileNotFoundError):
         return os.environ.get("ANTHROPIC_API_KEY", "")
+
+
+def get_unusual_whales_key() -> str:
+    """Get Unusual Whales API key from secrets/env.
+
+    Note: this module isn't currently imported by any page — every page
+    hand-rolls its own inline 3-tier key resolution instead (see app.py,
+    pages/1_📡_Market_Stress.py). This getter follows the intended shared
+    pattern for forward-looking consistency; migrating the whole app onto
+    it is a separate, pre-existing cleanup outside this feature's scope.
+    """
+    try:
+        return st.secrets["UNUSUAL_WHALES_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        return os.environ.get("UNUSUAL_WHALES_API_KEY", "")

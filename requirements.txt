@@ -8,3 +8,4 @@ rich
 fredapi>=0.5.1
 yfinance>=0.2.36
 anthropic>=0.40.0
+requests>=2.31.0

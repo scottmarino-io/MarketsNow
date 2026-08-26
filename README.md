@@ -13,7 +13,7 @@ Unified market intelligence dashboard — combining macro stress monitoring, sto
 | **📡 Market Stress** | 25+ macro indicators (VIX, credit spreads, yield curve, NFCI, etc.), composite stress score with historical chart, AI-powered analysis (Claude), next-day S&P 500 direction forecast, economic calendar |
 | **⚙ Wheel Screener** | Options wheel strategy screener — IV smile, yield vs delta, theta decay charts, wheel scoring, market breadth panel |
 | **📈 Momentum Screener** | S&P 100 + Nasdaq 100 (~170 stocks) ranked by composite score combining technical momentum, fundamental quality, and sentiment. Sector heatmap, deep dive with candlestick charts, optional options flow overlay |
-| **📺 Market Monitor** | Bloomberg-style price dashboard with sparklines, trend scoring, detailed metrics table, and market breadth |
+| **📺 Market Monitor** | Bloomberg-style price dashboard with sparklines, trend scoring, detailed metrics table, market breadth, and Unusual Whales market tide + SPY gamma exposure (optional) |
 
 ## CLI
 
@@ -49,6 +49,7 @@ cp .env.example .env
 | `FRED_API_KEY` | Yes (for stress monitor) | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) — free |
 | `MASSIVE_API_KEY` | Yes (for screener, wheel, monitor) | [massiveclient.com](https://massiveclient.com) |
 | `ANTHROPIC_API_KEY` | Optional (for AI analysis) | [console.anthropic.com](https://console.anthropic.com) |
+| `UNUSUAL_WHALES_API_KEY` | Optional (Market Tide + Gamma on Breadth) | [unusualwhales.com/api](https://unusualwhales.com/api) |
 
 ### 3. Run
 
@@ -82,7 +83,9 @@ MarketsNow/
 │   │   ├── signals.py              # Technical indicators & scoring
 │   │   └── options_flow.py         # Options chain analysis
 │   ├── market/                     # Market-wide modules
-│   │   └── breadth.py              # Advance/decline breadth proxy
+│   │   ├── breadth.py              # Advance/decline breadth proxy
+│   │   ├── uw_fetchers.py          # Unusual Whales: market tide, gamma exposure (SPY proxy)
+│   │   └── uw_display.py           # Shared Tide/Gamma card + chart rendering
 │   └── shared/                     # Cross-page utilities
 │       ├── api_keys.py             # Centralized key management
 │       └── theme.py                # Colors, CSS, Plotly defaults
@@ -99,6 +102,7 @@ MarketsNow/
 - **FRED** (Federal Reserve Bank of St. Louis) — macro economic indicators
 - **Yahoo Finance** — stock prices, fundamentals, S&P 500 data
 - **Massive API** — real-time snapshots, options chains, short interest, breadth
+- **Unusual Whales** — market tide (net call/put premium), SPY gamma exposure (optional)
 - **CNN Fear & Greed Index** — sentiment gauge
 - **Forex Factory** — economic calendar
 - **Google News / CNBC / MarketWatch RSS** — news headlines

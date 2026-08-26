@@ -11,9 +11,15 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from modules.market.breadth import BreadthFetcher, BreadthSnapshot
+from modules.market.uw_fetchers import fetch_market_tide_eod, fetch_gex_levels, fetch_market_tide
+from modules.market.uw_display import render_tide_card, render_gamma_card, render_tide_history_chart
 from modules.shared.theme import inject_css
 
 load_dotenv()
+
+# Optional — no sidebar prompt for this one (unlike Massive, which the page
+# requires and hard-stops without). UW is purely additive here.
+UNUSUAL_WHALES_KEY = os.environ.get("UNUSUAL_WHALES_API_KEY", "")
 
 st.set_page_config(
     page_title="Market Monitor · MarketsNow",
@@ -358,6 +364,33 @@ if bsnap:
             st.plotly_chart(fig_tick, use_container_width=True)
 else:
     st.info("Breadth data loading... Set MASSIVE_API_KEY in .env to enable.")
+
+# ── unusual whales: gamma exposure + market tide (SPY proxy) ────────────────
+
+if UNUSUAL_WHALES_KEY:
+    st.subheader("Market Tide & Gamma Exposure (SPY)")
+    try:
+        spy_price = all_data.get("SPY", {}).get("price") or None
+
+        gamma_vol = fetch_gex_levels(UNUSUAL_WHALES_KEY, "SPY", source="vol")
+        gamma_oi = fetch_gex_levels(UNUSUAL_WHALES_KEY, "SPY", source="oi")
+        tide = fetch_market_tide_eod(UNUSUAL_WHALES_KEY)
+
+        uw_c1, uw_c2 = st.columns(2)
+        render_gamma_card(gamma_vol, levels_oi=gamma_oi, spot_price=spy_price, col=uw_c1)
+        render_tide_card(tide, col=uw_c2)
+
+        with st.expander("Tide History (today)", expanded=False):
+            tide_df = fetch_market_tide(UNUSUAL_WHALES_KEY)
+            if not tide_df.empty:
+                st.plotly_chart(
+                    render_tide_history_chart(tide_df),
+                    use_container_width=True, config={"displayModeBar": False},
+                )
+            else:
+                st.caption("No tide history available yet today.")
+    except Exception as e:
+        st.warning(f"Could not load Unusual Whales data: {e}")
 
 # ── intraday charts ──────────────────────────────────────────────────────────
 
