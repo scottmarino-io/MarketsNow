@@ -130,14 +130,22 @@ def render_tide_history_chart(tide_df: pd.DataFrame) -> go.Figure:
         fig.update_layout(**theme.PLOTLY_LAYOUT, height=220)
         return fig
 
-    x = list(range(len(tide_df)))
+    # Ticks come with an ET UTC-offset (e.g. "2026-08-25T09:30:00-04:00"). Parse
+    # then strip the tz rather than converting to UTC/browser-local, so the axis
+    # shows the actual ET wall-clock time the data was captured at.
+    x = pd.to_datetime(tide_df.index)
+    if getattr(x, "tz", None) is not None:
+        x = x.tz_localize(None)
+
     fig.add_trace(go.Scatter(
         x=x, y=tide_df["net_call_premium"], mode="lines", name="Net Call Premium",
         line=dict(color=theme.GREEN, width=2),
+        hovertemplate="<b>%{x|%H:%M}</b><br>Net Call Premium: $%{y:,.0f}<extra></extra>",
     ))
     fig.add_trace(go.Scatter(
         x=x, y=tide_df["net_put_premium"], mode="lines", name="Net Put Premium",
         line=dict(color=theme.RED, width=2),
+        hovertemplate="<b>%{x|%H:%M}</b><br>Net Put Premium: $%{y:,.0f}<extra></extra>",
     ))
     fig.add_hline(y=0, line_dash="dot", line_color=theme.OVERLAY, line_width=1)
     fig.update_layout(
@@ -145,7 +153,11 @@ def render_tide_history_chart(tide_df: pd.DataFrame) -> go.Figure:
         height=240,
         margin=dict(l=40, r=20, t=10, b=30),
         legend=dict(bgcolor=theme.SURFACE, borderwidth=0),
-        xaxis=dict(showticklabels=False, gridcolor=theme.SURFACE),
+        xaxis=dict(
+            gridcolor=theme.SURFACE, tickformat="%H:%M",
+            tickfont=dict(size=10, color=theme.SUBTEXT), title="Time (ET)",
+        ),
         yaxis=dict(gridcolor=theme.SURFACE, title="Premium ($)"),
+        hovermode="x unified",
     )
     return fig
